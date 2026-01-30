@@ -264,12 +264,27 @@
             margin-bottom: 10px;
         }
 
+        .habit-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
         .habit-streak {
             display: flex;
             align-items: center;
             gap: 8px;
             color: var(--accent);
             font-weight: 600;
+        }
+
+        .habit-alarm {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--primary);
+            font-size: 0.9rem;
         }
 
         .habit-actions {
@@ -302,7 +317,7 @@
             transform: scale(1.05);
         }
 
-        .edit-btn, .delete-btn {
+        .edit-btn, .delete-btn, .alarm-btn {
             background: none;
             border: none;
             font-size: 1.2rem;
@@ -321,6 +336,107 @@
         .delete-btn:hover {
             color: var(--warning);
             background-color: rgba(255, 107, 107, 0.1);
+        }
+
+        .alarm-btn:hover {
+            color: var(--accent);
+            background-color: rgba(255, 159, 28, 0.1);
+        }
+
+        .alarm-btn.active {
+            color: var(--accent);
+        }
+
+        /* Alarm Settings Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: var(--border-radius);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--gray);
+            transition: var(--transition);
+        }
+
+        .close-btn:hover {
+            color: var(--dark);
+        }
+
+        .alarm-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .alarm-time-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .time-input {
+            width: 100px;
+        }
+
+        .repeat-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 5px;
+        }
+
+        .repeat-option {
+            padding: 8px 15px;
+            background-color: var(--light-gray);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .repeat-option:hover {
+            background-color: #dde1e6;
+        }
+
+        .repeat-option.selected {
+            background-color: var(--primary);
+            color: white;
         }
 
         /* Progress Section */
@@ -374,6 +490,67 @@
             border-radius: 10px;
             width: 0%;
             transition: width 1s ease-in-out;
+        }
+
+        /* Alarm Status */
+        .alarm-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: rgba(74, 111, 165, 0.1);
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+        }
+
+        .alarm-status-text {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alarm-toggle {
+            position: relative;
+            width: 60px;
+            height: 30px;
+        }
+
+        .alarm-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .alarm-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+
+        .alarm-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked + .alarm-slider {
+            background-color: var(--success);
+        }
+
+        input:checked + .alarm-slider:before {
+            transform: translateX(30px);
         }
 
         /* Stats */
@@ -499,6 +676,11 @@
                 width: 100%;
                 justify-content: space-between;
             }
+            
+            .alarm-time-row {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
@@ -548,6 +730,11 @@
                                 <input type="text" id="habitGoal" placeholder="e.g., 30 minutes, 10 pages">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="enableAlarm"> Enable Reminder Alarm
+                            </label>
+                        </div>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-plus"></i> Add Habit
                         </button>
@@ -556,6 +743,16 @@
 
                 <div class="card">
                     <h2><i class="fas fa-tasks"></i> Today's Habits</h2>
+                    <div class="alarm-status">
+                        <div class="alarm-status-text">
+                            <i class="fas fa-bell"></i>
+                            <span>Alarm Notifications: <strong id="alarmStatusText">Enabled</strong></span>
+                        </div>
+                        <label class="alarm-toggle">
+                            <input type="checkbox" id="globalAlarmToggle" checked>
+                            <span class="alarm-slider"></span>
+                        </label>
+                    </div>
                     <div class="habits-container" id="habitsContainer">
                         <!-- Habits will be dynamically added here -->
                     </div>
@@ -601,10 +798,73 @@
                         <!-- Achievements will be dynamically added here -->
                     </div>
                 </div>
+                
+                <div class="card">
+                    <h2><i class="fas fa-bell"></i> Upcoming Alarms</h2>
+                    <div id="upcomingAlarms">
+                        <!-- Upcoming alarms will be displayed here -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Alarm Settings Modal -->
+    <div class="modal" id="alarmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-clock"></i> Set Alarm</h3>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <form class="alarm-form" id="alarmForm">
+                <input type="hidden" id="alarmHabitId">
+                
+                <div class="form-group">
+                    <label for="alarmTime">Alarm Time</label>
+                    <div class="alarm-time-row">
+                        <input type="time" id="alarmTime" class="time-input" required>
+                        <span>Daily</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Repeat on Days</label>
+                    <div class="repeat-options" id="repeatOptions">
+                        <div class="repeat-option selected" data-day="0">Sun</div>
+                        <div class="repeat-option selected" data-day="1">Mon</div>
+                        <div class="repeat-option selected" data-day="2">Tue</div>
+                        <div class="repeat-option selected" data-day="3">Wed</div>
+                        <div class="repeat-option selected" data-day="4">Thu</div>
+                        <div class="repeat-option selected" data-day="5">Fri</div>
+                        <div class="repeat-option selected" data-day="6">Sat</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alarmMessage">Reminder Message</label>
+                    <input type="text" id="alarmMessage" placeholder="e.g., Time to meditate!" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alarmSound">Notification Sound</label>
+                    <select id="alarmSound">
+                        <option value="default">Default Sound</option>
+                        <option value="bell">Bell</option>
+                        <option value="chime">Chime</option>
+                        <option value="beep">Beep</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <button type="submit" class="btn btn-primary">Set Alarm</button>
+                    <button type="button" class="btn btn-outline" id="testAlarmBtn">Test Alarm</button>
+                    <button type="button" class="btn btn-warning" id="removeAlarmBtn">Remove Alarm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification -->
     <div class="notification" id="notification">
         <i class="fas fa-check-circle"></i>
         <div>
@@ -613,13 +873,29 @@
         </div>
     </div>
 
+    <!-- Alarm Sound Elements (hidden) -->
+    <audio id="alarmSoundDefault" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="alarmSoundBell" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="alarmSoundChime" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-correct-answer-tone-2870.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="alarmSoundBeep" preload="auto">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-retro-game-emergency-alarm-1000.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
             // Check if there's existing data in localStorage
             let habits = JSON.parse(localStorage.getItem('habits')) || [];
             let gamifiedMode = localStorage.getItem('gamifiedMode') === 'true';
+            let alarmsEnabled = localStorage.getItem('alarmsEnabled') !== 'false'; // Default to true
             let achievements = JSON.parse(localStorage.getItem('achievements')) || getDefaultAchievements();
+            let alarmInterval = null;
             
             // DOM Elements
             const habitForm = document.getElementById('habitForm');
@@ -636,14 +912,33 @@
             const notificationMessage = document.getElementById('notificationMessage');
             const timeframeButtons = document.querySelectorAll('.timeframe-btn');
             const achievementsContainer = document.getElementById('achievementsContainer');
+            const alarmModal = document.getElementById('alarmModal');
+            const closeModal = document.getElementById('closeModal');
+            const alarmForm = document.getElementById('alarmForm');
+            const alarmHabitId = document.getElementById('alarmHabitId');
+            const alarmTime = document.getElementById('alarmTime');
+            const alarmMessage = document.getElementById('alarmMessage');
+            const alarmSound = document.getElementById('alarmSound');
+            const testAlarmBtn = document.getElementById('testAlarmBtn');
+            const removeAlarmBtn = document.getElementById('removeAlarmBtn');
+            const repeatOptions = document.querySelectorAll('.repeat-option');
+            const globalAlarmToggle = document.getElementById('globalAlarmToggle');
+            const alarmStatusText = document.getElementById('alarmStatusText');
+            const upcomingAlarms = document.getElementById('upcomingAlarms');
+            const enableAlarmCheckbox = document.getElementById('enableAlarm');
             
-            // Set initial mode
+            // Set initial mode and alarm status
             updateMode();
+            updateAlarmStatus();
             
             // Load initial data
             renderHabits();
             updateStats();
             renderAchievements();
+            renderUpcomingAlarms();
+            
+            // Start alarm checker
+            startAlarmChecker();
             
             // Handle habit form submission
             habitForm.addEventListener('submit', function(e) {
@@ -652,6 +947,7 @@
                 const habitName = document.getElementById('habitName').value;
                 const habitCategory = document.getElementById('habitCategory').value;
                 const habitGoal = document.getElementById('habitGoal').value;
+                const enableAlarm = enableAlarmCheckbox.checked;
                 
                 const newHabit = {
                     id: Date.now(),
@@ -661,17 +957,33 @@
                     streak: 0,
                     history: [],
                     completedToday: false,
-                    lastCompleted: null
+                    lastCompleted: null,
+                    alarm: enableAlarm ? {
+                        enabled: true,
+                        time: "09:00",
+                        days: [1, 2, 3, 4, 5, 6, 0], // Default: all days
+                        message: `Time for ${habitName}!`,
+                        sound: "default"
+                    } : null
                 };
                 
                 habits.push(newHabit);
                 saveHabits();
                 renderHabits();
                 updateStats();
+                renderUpcomingAlarms();
+                
+                // Show alarm modal if alarm is enabled
+                if (enableAlarm) {
+                    setTimeout(() => {
+                        openAlarmModal(newHabit.id);
+                    }, 300);
+                }
                 
                 // Reset form
                 habitForm.reset();
                 document.getElementById('habitCategory').value = 'health';
+                enableAlarmCheckbox.checked = false;
                 
                 // Show notification
                 showNotification('Habit Added!', `"${habitName}" has been added to your tracker.`);
@@ -691,6 +1003,93 @@
                     this.classList.add('active');
                     updateStats();
                 });
+            });
+            
+            // Handle global alarm toggle
+            globalAlarmToggle.addEventListener('change', function() {
+                alarmsEnabled = this.checked;
+                localStorage.setItem('alarmsEnabled', alarmsEnabled);
+                updateAlarmStatus();
+                
+                if (alarmsEnabled) {
+                    showNotification('Alarms Enabled', 'You will now receive habit reminders.');
+                    startAlarmChecker();
+                } else {
+                    showNotification('Alarms Disabled', 'Habit reminders are now turned off.');
+                    stopAlarmChecker();
+                }
+            });
+            
+            // Handle repeat option selection
+            repeatOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                });
+            });
+            
+            // Close modal
+            closeModal.addEventListener('click', function() {
+                alarmModal.style.display = 'none';
+            });
+            
+            // Handle alarm form submission
+            alarmForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const habitId = parseInt(alarmHabitId.value);
+                const habit = habits.find(h => h.id === habitId);
+                
+                if (!habit) return;
+                
+                // Get selected days
+                const selectedDays = Array.from(repeatOptions)
+                    .filter(opt => opt.classList.contains('selected'))
+                    .map(opt => parseInt(opt.getAttribute('data-day')));
+                
+                // Update or create alarm
+                habit.alarm = {
+                    enabled: true,
+                    time: alarmTime.value,
+                    days: selectedDays,
+                    message: alarmMessage.value,
+                    sound: alarmSound.value
+                };
+                
+                saveHabits();
+                renderHabits();
+                renderUpcomingAlarms();
+                alarmModal.style.display = 'none';
+                
+                showNotification('Alarm Set!', `Reminder for "${habit.name}" has been set.`);
+            });
+            
+            // Test alarm button
+            testAlarmBtn.addEventListener('click', function() {
+                playAlarmSound(alarmSound.value);
+                showNotification('Test Alarm', 'This is a test notification for your habit reminder.');
+            });
+            
+            // Remove alarm button
+            removeAlarmBtn.addEventListener('click', function() {
+                const habitId = parseInt(alarmHabitId.value);
+                const habit = habits.find(h => h.id === habitId);
+                
+                if (habit) {
+                    habit.alarm = null;
+                    saveHabits();
+                    renderHabits();
+                    renderUpcomingAlarms();
+                    alarmModal.style.display = 'none';
+                    
+                    showNotification('Alarm Removed', `Reminder for "${habit.name}" has been removed.`);
+                }
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target === alarmModal) {
+                    alarmModal.style.display = 'none';
+                }
             });
             
             // Render habits to the UI
@@ -723,17 +1122,29 @@
                     
                     habitElement.style.borderLeftColor = categoryColors[habit.category] || categoryColors.other;
                     
+                    const hasAlarm = habit.alarm && habit.alarm.enabled;
+                    const alarmTimeText = hasAlarm ? formatTime(habit.alarm.time) : 'No alarm';
+                    
                     habitElement.innerHTML = `
                         <div class="habit-info">
                             <div class="habit-name">${habit.name}</div>
                             <div class="habit-category">${getCategoryName(habit.category)}</div>
-                            <div class="habit-streak">
-                                <i class="fas fa-fire"></i>
-                                <span>${habit.streak} day${habit.streak !== 1 ? 's' : ''} streak</span>
+                            <div class="habit-details">
+                                <div class="habit-streak">
+                                    <i class="fas fa-fire"></i>
+                                    <span>${habit.streak} day${habit.streak !== 1 ? 's' : ''} streak</span>
+                                </div>
+                                <div class="habit-alarm">
+                                    <i class="fas ${hasAlarm ? 'fa-bell' : 'fa-bell-slash'}"></i>
+                                    <span>${alarmTimeText}</span>
+                                </div>
                             </div>
                             ${habit.goal ? `<div><small>Goal: ${habit.goal}</small></div>` : ''}
                         </div>
                         <div class="habit-actions">
+                            <button class="alarm-btn ${hasAlarm ? 'active' : ''}" data-id="${habit.id}" title="${hasAlarm ? 'Edit alarm' : 'Set alarm'}">
+                                <i class="fas ${hasAlarm ? 'fa-bell' : 'fa-bell-slash'}"></i>
+                            </button>
                             <button class="check-btn ${habit.completedToday ? 'completed' : ''}" data-id="${habit.id}" title="Mark as ${habit.completedToday ? 'incomplete' : 'complete'}">
                                 <i class="fas ${habit.completedToday ? 'fa-check-circle' : 'fa-circle'}"></i>
                             </button>
@@ -770,6 +1181,49 @@
                         deleteHabit(id);
                     });
                 });
+                
+                document.querySelectorAll('.alarm-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const id = parseInt(this.getAttribute('data-id'));
+                        openAlarmModal(id);
+                    });
+                });
+            }
+            
+            // Open alarm modal
+            function openAlarmModal(habitId) {
+                const habit = habits.find(h => h.id === habitId);
+                if (!habit) return;
+                
+                alarmHabitId.value = habitId;
+                
+                if (habit.alarm) {
+                    alarmTime.value = habit.alarm.time;
+                    alarmMessage.value = habit.alarm.message;
+                    alarmSound.value = habit.alarm.sound || 'default';
+                    
+                    // Set selected days
+                    repeatOptions.forEach(option => {
+                        const day = parseInt(option.getAttribute('data-day'));
+                        if (habit.alarm.days.includes(day)) {
+                            option.classList.add('selected');
+                        } else {
+                            option.classList.remove('selected');
+                        }
+                    });
+                } else {
+                    // Set defaults
+                    alarmTime.value = '09:00';
+                    alarmMessage.value = `Time for ${habit.name}!`;
+                    alarmSound.value = 'default';
+                    
+                    // Select all days by default
+                    repeatOptions.forEach(option => {
+                        option.classList.add('selected');
+                    });
+                }
+                
+                alarmModal.style.display = 'flex';
             }
             
             // Toggle habit completion
@@ -860,6 +1314,7 @@
                     saveHabits();
                     renderHabits();
                     updateStats();
+                    renderUpcomingAlarms();
                     
                     showNotification('Habit Deleted', `"${habitName}" has been removed from your tracker.`);
                 }
@@ -990,6 +1445,13 @@
                 }
             }
             
+            // Update alarm status display
+            function updateAlarmStatus() {
+                globalAlarmToggle.checked = alarmsEnabled;
+                alarmStatusText.textContent = alarmsEnabled ? 'Enabled' : 'Disabled';
+                alarmStatusText.style.color = alarmsEnabled ? 'var(--success)' : 'var(--warning)';
+            }
+            
             // Show notification
             function showNotification(title, message, type = 'success') {
                 notificationTitle.textContent = title;
@@ -1002,6 +1464,10 @@
                 } else if (type === 'warning') {
                     notification.style.borderLeftColor = '#FF9F1C';
                     notification.querySelector('i').style.color = '#FF9F1C';
+                } else if (type === 'alarm') {
+                    notification.style.borderLeftColor = '#4A6FA5';
+                    notification.querySelector('i').style.color = '#4A6FA5';
+                    notification.querySelector('i').className = 'fas fa-bell';
                 }
                 
                 notification.classList.add('show');
@@ -1010,6 +1476,18 @@
                 setTimeout(() => {
                     notification.classList.remove('show');
                 }, 3000);
+            }
+            
+            // Format time for display
+            function formatTime(timeString) {
+                if (!timeString) return '';
+                
+                const [hours, minutes] = timeString.split(':');
+                const hour = parseInt(hours);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                const displayHour = hour % 12 || 12;
+                
+                return `${displayHour}:${minutes} ${ampm}`;
             }
             
             // Get category name from value
@@ -1059,7 +1537,8 @@
                     { id: 'streak-30', name: 'Monthly Master', description: '30-day streak', unlocked: false },
                     { id: 'streak-90', name: 'Quarter Queen/King', description: '90-day streak', unlocked: false },
                     { id: 'all-today', name: 'Perfect Day', description: 'Complete all habits in one day', unlocked: false },
-                    { id: 'habit-5', name: 'Habit Collector', description: 'Track 5 habits simultaneously', unlocked: false }
+                    { id: 'habit-5', name: 'Habit Collector', description: 'Track 5 habits simultaneously', unlocked: false },
+                    { id: 'alarm-set', name: 'Reminder Set', description: 'Set your first alarm', unlocked: false }
                 ];
             }
             
@@ -1076,6 +1555,7 @@
                         if (achievement.id.includes('streak')) icon = 'fas fa-fire';
                         else if (achievement.id === 'first-habit') icon = 'fas fa-star';
                         else if (achievement.id === 'all-today') icon = 'fas fa-trophy';
+                        else if (achievement.id === 'alarm-set') icon = 'fas fa-bell';
                         else icon = 'fas fa-medal';
                     }
                     
@@ -1116,6 +1596,12 @@
                 if (habits.length > 0 && completedCount === habits.length) {
                     unlockAchievement('all-today');
                 }
+                
+                // Check for "alarm set" achievement
+                const hasAlarm = habits.some(h => h.alarm && h.alarm.enabled);
+                if (hasAlarm) {
+                    unlockAchievement('alarm-set');
+                }
             }
             
             // Call checkOtherAchievements when habits are updated
@@ -1125,18 +1611,194 @@
                 checkOtherAchievements();
             };
             
-            // Initialize with some sample habits if empty
-            if (habits.length === 0) {
-                const sampleHabits = [
-                    { id: 1, name: "Morning Meditation", category: "spiritual", goal: "10 minutes", streak: 0, history: [], completedToday: false, lastCompleted: null },
-                    { id: 2, name: "Exercise", category: "health", goal: "30 minutes", streak: 0, history: [], completedToday: false, lastCompleted: null },
-                    { id: 3, name: "Read a Book", category: "learning", goal: "20 pages", streak: 0, history: [], completedToday: false, lastCompleted: null }
-                ];
+            // Render upcoming alarms
+            function renderUpcomingAlarms() {
+                upcomingAlarms.innerHTML = '';
                 
-                habits = sampleHabits;
-                saveHabits();
-                renderHabits();
-                updateStats();
+                const now = new Date();
+                const currentDay = now.getDay();
+                const currentTime = now.getHours() * 60 + now.getMinutes();
+                
+                // Get habits with alarms
+                const habitsWithAlarms = habits.filter(h => h.alarm && h.alarm.enabled);
+                
+                if (habitsWithAlarms.length === 0) {
+                    upcomingAlarms.innerHTML = `
+                        <div class="empty-state" style="padding: 20px 0;">
+                            <i class="fas fa-bell-slash"></i>
+                            <p>No alarms set</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Create list of upcoming alarms
+                habitsWithAlarms.forEach(habit => {
+                    const alarm = habit.alarm;
+                    const [alarmHour, alarmMinute] = alarm.time.split(':').map(Number);
+                    const alarmTimeMinutes = alarmHour * 60 + alarmMinute;
+                    
+                    // Check if alarm is set for today
+                    const isToday = alarm.days.includes(currentDay);
+                    
+                    // Calculate time until alarm
+                    let timeUntilAlarm = alarmTimeMinutes - currentTime;
+                    let displayText = '';
+                    
+                    if (isToday) {
+                        if (timeUntilAlarm > 0) {
+                            const hours = Math.floor(timeUntilAlarm / 60);
+                            const minutes = timeUntilAlarm % 60;
+                            
+                            if (hours > 0) {
+                                displayText = `In ${hours}h ${minutes}m`;
+                            } else {
+                                displayText = `In ${minutes}m`;
+                            }
+                        } else if (timeUntilAlarm > -15) { // Within last 15 minutes
+                            displayText = 'Recently';
+                        } else {
+                            displayText = 'Tomorrow';
+                        }
+                    } else {
+                        // Find next day with alarm
+                        let daysToAdd = 1;
+                        for (let i = 1; i <= 7; i++) {
+                            const nextDay = (currentDay + i) % 7;
+                            if (alarm.days.includes(nextDay)) {
+                                daysToAdd = i;
+                                break;
+                            }
+                        }
+                        displayText = `In ${daysToAdd} day${daysToAdd > 1 ? 's' : ''}`;
+                    }
+                    
+                    const alarmElement = document.createElement('div');
+                    alarmElement.className = 'habit-item';
+                    alarmElement.style.marginBottom = '10px';
+                    alarmElement.style.padding = '15px';
+                    alarmElement.innerHTML = `
+                        <div class="habit-info">
+                            <div class="habit-name" style="font-size: 1.1rem;">${habit.name}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <div class="habit-alarm">
+                                    <i class="fas fa-bell"></i>
+                                    <span>${formatTime(alarm.time)}</span>
+                                </div>
+                                <span style="color: var(--primary); font-weight: 600;">${displayText}</span>
+                            </div>
+                        </div>
+                    `;
+                    
+                    upcomingAlarms.appendChild(alarmElement);
+                });
+            }
+            
+            // Start alarm checker
+            function startAlarmChecker() {
+                if (alarmInterval) clearInterval(alarmInterval);
+                
+                if (!alarmsEnabled) return;
+                
+                alarmInterval = setInterval(() => {
+                    checkAlarms();
+                }, 60000); // Check every minute
+                
+                // Initial check
+                checkAlarms();
+            }
+            
+            // Stop alarm checker
+            function stopAlarmChecker() {
+                if (alarmInterval) {
+                    clearInterval(alarmInterval);
+                    alarmInterval = null;
+                }
+            }
+            
+            // Check for alarms that should trigger now
+            function checkAlarms() {
+                if (!alarmsEnabled) return;
+                
+                const now = new Date();
+                const currentDay = now.getDay();
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+                
+                habits.forEach(habit => {
+                    if (!habit.alarm || !habit.alarm.enabled) return;
+                    
+                    // Check if alarm is set for today
+                    if (!habit.alarm.days.includes(currentDay)) return;
+                    
+                    // Parse alarm time
+                    const [alarmHour, alarmMinute] = habit.alarm.time.split(':').map(Number);
+                    
+                    // Check if it's time for the alarm
+                    if (currentHour === alarmHour && currentMinute === alarmMinute) {
+                        // Trigger alarm
+                        triggerAlarm(habit);
+                    }
+                });
+            }
+            
+            // Trigger an alarm
+            function triggerAlarm(habit) {
+                // Check if habit is already completed today
+                if (habit.completedToday) return;
+                
+                // Play sound
+                playAlarmSound(habit.alarm.sound);
+                
+                // Show notification
+                showNotification(
+                    `Time for ${habit.name}!`,
+                    habit.alarm.message || `Don't forget to ${habit.name.toLowerCase()}!`,
+                    'alarm'
+                );
+                
+                // Request browser notification if supported
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(`Time for ${habit.name}!`, {
+                        body: habit.alarm.message || `Don't forget to ${habit.name.toLowerCase()}!`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3208/3208720.png'
+                    });
+                }
+            }
+            
+            // Play alarm sound
+            function playAlarmSound(soundType) {
+                let soundElement;
+                
+                switch (soundType) {
+                    case 'bell':
+                        soundElement = document.getElementById('alarmSoundBell');
+                        break;
+                    case 'chime':
+                        soundElement = document.getElementById('alarmSoundChime');
+                        break;
+                    case 'beep':
+                        soundElement = document.getElementById('alarmSoundBeep');
+                        break;
+                    default:
+                        soundElement = document.getElementById('alarmSoundDefault');
+                }
+                
+                if (soundElement) {
+                    soundElement.currentTime = 0;
+                    soundElement.play().catch(e => console.log('Audio play failed:', e));
+                }
+            }
+            
+            // Request notification permission
+            function requestNotificationPermission() {
+                if ('Notification' in window && Notification.permission === 'default') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            console.log('Notification permission granted');
+                        }
+                    });
+                }
             }
             
             // Auto-check for missed days (reset streaks if a day was missed)
@@ -1161,6 +1823,65 @@
                 
                 saveHabits();
             }
+            
+            // Initialize with some sample habits if empty
+            if (habits.length === 0) {
+                const sampleHabits = [
+                    { 
+                        id: 1, 
+                        name: "Morning Meditation", 
+                        category: "spiritual", 
+                        goal: "10 minutes", 
+                        streak: 0, 
+                        history: [], 
+                        completedToday: false, 
+                        lastCompleted: null,
+                        alarm: {
+                            enabled: true,
+                            time: "07:00",
+                            days: [1, 2, 3, 4, 5, 6, 0],
+                            message: "Time for morning meditation! Start your day with peace.",
+                            sound: "chime"
+                        }
+                    },
+                    { 
+                        id: 2, 
+                        name: "Exercise", 
+                        category: "health", 
+                        goal: "30 minutes", 
+                        streak: 0, 
+                        history: [], 
+                        completedToday: false, 
+                        lastCompleted: null,
+                        alarm: {
+                            enabled: true,
+                            time: "18:00",
+                            days: [1, 2, 3, 4, 5],
+                            message: "Time to exercise! Keep your body healthy and strong.",
+                            sound: "bell"
+                        }
+                    },
+                    { 
+                        id: 3, 
+                        name: "Read a Book", 
+                        category: "learning", 
+                        goal: "20 pages", 
+                        streak: 0, 
+                        history: [], 
+                        completedToday: false, 
+                        lastCompleted: null 
+                    }
+                ];
+                
+                habits = sampleHabits;
+                saveHabits();
+                renderHabits();
+                updateStats();
+                renderUpcomingAlarms();
+            }
+            
+            // Request notification permission on load
+            requestNotificationPermission();
             
             // Run check for missed days on load
             checkForMissedDays();
